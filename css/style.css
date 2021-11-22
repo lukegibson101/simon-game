@@ -19,6 +19,7 @@ h2 {
     margin-right: auto;
     margin-bottom: 35px;
     text-align: center;
+    background-color: red;
 }
 .circle {
     border-radius: 50%;
@@ -84,4 +85,49 @@ h2 {
 
 .light {
     background-color: #990000;
+}
+
+@media only screen and (max-width: 499px) {
+    .container {
+        width: 400px;
+    }
+
+    .circle1 {
+        height: 400px;
+        width: 400px;
+    }
+    
+    .circle2 {
+        height: 300px;
+        width: 300px;
+        top: 50px;
+        left: 50px;
+    }
+    .circle3 {
+        height: 200px;
+        width: 200px;
+        top: 100px;
+        left: 100px;
+    }
+    .circle4 {
+        height: 100px;
+        width: 100px;
+        top: 150px;
+        left: 150px;
+    }
+
+    .scorebox {
+        border-radius: 25%;
+        box-sizing: border-box;
+        position: absolute;
+        background-color: #E6ECF0;
+        height: 80px;
+        width: 80px;
+        top: 110px;
+        left: 110px;
+        text-align: center;
+        color: #445261;
+        font-size: 3em;
+        padding-top: 10px;
+    }
 }

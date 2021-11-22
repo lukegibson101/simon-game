@@ -1,5 +1,7 @@
 body {
     font-family: Montserrat, sans-serif;
+    padding: 0;
+    margin: 0;
 }
 
 h1 {
@@ -19,7 +21,6 @@ h2 {
     margin-right: auto;
     margin-bottom: 35px;
     text-align: center;
-    background-color: red;
 }
 .circle {
     border-radius: 50%;
@@ -91,43 +92,132 @@ h2 {
     .container {
         width: 400px;
     }
-
     .circle1 {
         height: 400px;
         width: 400px;
     }
     
     .circle2 {
-        height: 300px;
-        width: 300px;
-        top: 50px;
-        left: 50px;
+        height: 320px;
+        width: 320px;
+        top: 40px;
+        left: 40px;
     }
     .circle3 {
-        height: 200px;
-        width: 200px;
-        top: 100px;
-        left: 100px;
+        height: 240px;
+        width: 240px;
+        top: 80px;
+        left: 80px;
     }
     .circle4 {
-        height: 100px;
-        width: 100px;
-        top: 150px;
-        left: 150px;
+        height: 160px;
+        width: 160px;
+        top: 120px;
+        left: 120px;
+    }
+    
+    .scorebox {
+        height: 64px;
+        width: 64px;
+        top: 168px;
+        left: 168px;
+        font-size: 2.4em;
+        padding-top: 8px;
+    }
+
+    .button {
+        top: 440px
+    }
+
+}
+
+@media only screen and (max-width: 399px) {
+    .container {
+        width: 360px;
+    }
+
+    .circle1 {
+        height: 360px;
+        width: 360px;
+    }
+    
+    .circle2 {
+        height: 270px;
+        width: 270px;
+        top: 45px;
+        left: 45px;
+    }
+    .circle3 {
+        height: 180px;
+        width: 180px;
+        top: 90px;
+        left: 90px;
+    }
+    .circle4 {
+        height: 90px;
+        width: 90px;
+        top: 135px;
+        left: 135px;
     }
 
     .scorebox {
-        border-radius: 25%;
-        box-sizing: border-box;
-        position: absolute;
-        background-color: #E6ECF0;
-        height: 80px;
-        width: 80px;
-        top: 110px;
-        left: 110px;
-        text-align: center;
-        color: #445261;
-        font-size: 3em;
+        height: 36px;
+        width: 36px;
+        top: 162px;
+        left: 162px;
+        font-size: 1.5em;
+        padding-top: 3px;
+    }
+
+    .button {
+        top: 396px
+    }
+
+
+    
+}
+
+@media only screen and (max-width: 360px) {
+    .container {
+        width: 300px;
+    }
+    .circle1 {
+        height: 300px;
+        width: 300px;
+        background-color: #009FE3;
+    }
+    
+    .circle2 {
+        height: 240px;
+        width: 240px;
+        top: 30px;
+        left: 30px;
+    }
+    .circle3 {
+        height: 180px;
+        width: 180px;
+        background-color: #EFB920;
+        top: 60px;
+        left: 60px;
+    }
+    .circle4 {
+        height: 120px;
+        width: 120px;
+        background-color: #23BBBB;
+        top: 90px;
+        left: 90px;
+    }
+    
+    .scorebox {
+        height: 48px;
+        width: 48px;
+        top: 126px;
+        left: 126px;
+        font-size: 1em;
         padding-top: 10px;
+    }
+
+    .button {
+        top: 330px
     }
 }

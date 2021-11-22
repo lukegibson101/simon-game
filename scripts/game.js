@@ -75,7 +75,12 @@ function playerTurn() {
         }
     } else {
         game.turnInProgress = true;
-        alert("Wrong Move!");
+        Swal.fire({
+            icon: 'error',
+            position: 'center',
+            title: 'You got the wrong sequence',
+            text: 'Please try again!',
+          })
     }
 }
 

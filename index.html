@@ -4,27 +4,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jest Simon Game</title>
+    <title>Simon — Daily Challenge</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23009FE3'/><circle cx='50' cy='50' r='30' fill='%23EFB920'/></svg>">
     <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
     <div class="container">
         <h1>Simon</h1>
-        <h2>Memory game</h2>
+        <h2>Daily memory challenge</h2>
     </div>
-    <div class="container">
-        <div data-listener="false" class="circle circle1" id="button1"></div>
-        <div data-listener="false" class="circle circle2" id="button2"></div>
-        <div data-listener="false" class="circle circle3" id="button3"></div>
-        <div data-listener="false" class="circle circle4" id="button4"></div>
-        <div class="scorebox" id="score">0</div>
-        <button class="button" onclick="newGame()">New game</button>
+
+    <div class="layout">
+        <div class="game-panel">
+            <div class="board">
+                <div data-listener="false" class="circle circle1" id="button1" role="button" tabindex="0"
+                    aria-label="Blue button"></div>
+                <div data-listener="false" class="circle circle2" id="button2" role="button" tabindex="0"
+                    aria-label="Grey button"></div>
+                <div data-listener="false" class="circle circle3" id="button3" role="button" tabindex="0"
+                    aria-label="Yellow button"></div>
+                <div data-listener="false" class="circle circle4" id="button4" role="button" tabindex="0"
+                    aria-label="Teal button"></div>
+                <div class="scorebox" id="score" aria-live="polite">0</div>
+            </div>
+            <div class="controls">
+                <input type="text" id="player-name" class="name-input" placeholder="Your name" maxlength="20"
+                    aria-label="Your name">
+                <button class="button" onclick="newGame()">Daily challenge</button>
+                <button class="button button-practice" onclick="practiceGame()">Practice</button>
+            </div>
+        </div>
+
+        <aside class="scoreboard" aria-label="Leaderboard">
+            <h3>Leaderboard</h3>
+            <ol id="scoreboard-list" class="scoreboard-list">
+                <li class="scoreboard-empty">No scores yet — be the first!</li>
+            </ol>
+        </aside>
     </div>
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="scripts/game.js"></script>
+    <script>
+        // Render any existing scores as soon as the page loads. Guarded so the
+        // Jest/jsdom environment (where these live in a module, not globals)
+        // doesn't throw while parsing index.html.
+        if (typeof renderScoreboard === "function") {
+            renderScoreboard();
+        }
+    </script>
 </body>
 
 </html>

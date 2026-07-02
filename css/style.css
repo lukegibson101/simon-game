@@ -2,6 +2,7 @@ body {
     font-family: Montserrat, sans-serif;
     padding: 0;
     margin: 0;
+    color: #445261;
 }
 
 h1 {
@@ -17,16 +18,44 @@ h2 {
 .container {
     position: relative;
     width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 35px;
+    max-width: 100%;
+    margin: 20px auto 25px;
     text-align: center;
 }
+
+/* Two-column layout: game on the left, scoreboard on the right. */
+.layout {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 40px;
+    padding: 0 20px 40px;
+}
+
+.game-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.board {
+    position: relative;
+    width: 500px;
+    height: 500px;
+}
+
 .circle {
     border-radius: 50%;
     position: absolute;
     cursor: pointer;
 }
+
+.circle:focus-visible {
+    outline: 5px solid #ffffff;
+    outline-offset: -10px;
+}
+
 .circle1 {
     height: 500px;
     width: 500px;
@@ -40,6 +69,7 @@ h2 {
     top: 50px;
     left: 50px;
 }
+
 .circle3 {
     height: 300px;
     width: 300px;
@@ -47,6 +77,7 @@ h2 {
     top: 100px;
     left: 100px;
 }
+
 .circle4 {
     height: 200px;
     width: 200px;
@@ -70,6 +101,24 @@ h2 {
     padding-top: 10px;
 }
 
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 30px;
+    align-items: center;
+}
+
+.name-input {
+    height: 40px;
+    box-sizing: border-box;
+    border: 2px solid #445261;
+    border-radius: 5px;
+    padding: 0 12px;
+    font-family: inherit;
+    font-size: 1em;
+    width: 160px;
+}
+
 .button {
     background-color: #FF5A60;
     color: #FFF;
@@ -77,45 +126,117 @@ h2 {
     height: 40px;
     width: 160px;
     border-radius: 5px;
-    margin: 0 auto;
-    display: block;
-    top: 550px;
-    position: relative;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #e64c52;
+}
+
+.button-practice {
+    background-color: #23BBBB;
+}
+
+.button-practice:hover {
+    background-color: #1ea3a3;
+}
+
+
+/* Scoreboard */
+.scoreboard {
+    width: 300px;
+    max-width: 100%;
+    background-color: #E6ECF0;
+    border-radius: 10px;
+    padding: 20px 24px;
+    box-sizing: border-box;
+}
+
+.scoreboard h3 {
+    margin: 0 0 16px;
     font-weight: 600;
 }
 
-.light {
-    background-color: #990000;
+.scoreboard-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: rank;
 }
 
-@media only screen and (max-width: 499px) {
-    .container {
+.scoreboard-list li {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #d3dae1;
+}
+
+.scoreboard-list li:last-child {
+    border-bottom: 0;
+}
+
+.scoreboard-list .rank {
+    width: 28px;
+    font-weight: 600;
+    color: #009FE3;
+}
+
+.scoreboard-list .name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scoreboard-list .pts {
+    font-weight: 600;
+    font-size: 1.1em;
+}
+
+.scoreboard-list li:nth-child(1) .rank {
+    color: #EFB920;
+}
+
+.scoreboard-empty {
+    color: #6b7783;
+    font-style: italic;
+    justify-content: center;
+}
+
+@media only screen and (max-width: 560px) {
+    .board {
         width: 400px;
+        height: 400px;
     }
+
     .circle1 {
         height: 400px;
         width: 400px;
     }
-    
+
     .circle2 {
         height: 320px;
         width: 320px;
         top: 40px;
         left: 40px;
     }
+
     .circle3 {
         height: 240px;
         width: 240px;
         top: 80px;
         left: 80px;
     }
+
     .circle4 {
         height: 160px;
         width: 160px;
         top: 120px;
         left: 120px;
     }
-    
+
     .scorebox {
         height: 64px;
         width: 64px;
@@ -124,90 +245,40 @@ h2 {
         font-size: 2.4em;
         padding-top: 8px;
     }
-
-    .button {
-        top: 440px
-    }
-
 }
 
-@media only screen and (max-width: 399px) {
-    .container {
-        width: 360px;
-    }
-
-    .circle1 {
-        height: 360px;
-        width: 360px;
-    }
-    
-    .circle2 {
-        height: 270px;
-        width: 270px;
-        top: 45px;
-        left: 45px;
-    }
-    .circle3 {
-        height: 180px;
-        width: 180px;
-        top: 90px;
-        left: 90px;
-    }
-    .circle4 {
-        height: 90px;
-        width: 90px;
-        top: 135px;
-        left: 135px;
-    }
-
-    .scorebox {
-        height: 36px;
-        width: 36px;
-        top: 162px;
-        left: 162px;
-        font-size: 1.5em;
-        padding-top: 3px;
-    }
-
-    .button {
-        top: 396px
-    }
-
-
-    
-}
-
-@media only screen and (max-width: 360px) {
-    .container {
+@media only screen and (max-width: 430px) {
+    .board {
         width: 300px;
+        height: 300px;
     }
+
     .circle1 {
         height: 300px;
         width: 300px;
-        background-color: #009FE3;
     }
-    
+
     .circle2 {
         height: 240px;
         width: 240px;
         top: 30px;
         left: 30px;
     }
+
     .circle3 {
         height: 180px;
         width: 180px;
-        background-color: #EFB920;
         top: 60px;
         left: 60px;
     }
+
     .circle4 {
         height: 120px;
         width: 120px;
-        background-color: #23BBBB;
         top: 90px;
         left: 90px;
     }
-    
+
     .scorebox {
         height: 48px;
         width: 48px;
@@ -217,7 +288,11 @@ h2 {
         padding-top: 8px;
     }
 
-    .button {
-        top: 330px
+    .controls {
+        flex-direction: column;
     }
+}
+
+.light {
+    background-color: #990000;
 }

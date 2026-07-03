@@ -17,6 +17,13 @@ function getInterval(score) {
     return Math.max(400, 1000 - score * 60);
 }
 
+// How long a button stays lit. Kept to a fraction of the interval so there is
+// always a dark gap between flashes — otherwise, at the speed floor, a repeated
+// button would blur into a single continuous light.
+function getLightDuration(score) {
+    return Math.round(getInterval(score) * 0.4);
+}
+
 // --- Sound -------------------------------------------------------------------
 // One tone per button via the Web Audio API — no audio files needed. Guarded so
 // it silently no-ops where AudioContext is unavailable (e.g. jsdom/tests).
@@ -178,7 +185,7 @@ function lightsOn(circ) {
     playSound(circ);
     setTimeout(() => {
         document.getElementById(circ).classList.remove("light");
-    }, 400);
+    }, getLightDuration(game.score));
 }
 
 function showTurns() {
@@ -229,6 +236,7 @@ if (typeof module !== "undefined") {
         playerTurn,
         handlePlayerClick,
         getInterval,
+        getLightDuration,
         loadScores,
         saveScore,
         topScores,

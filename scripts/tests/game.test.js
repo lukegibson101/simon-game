@@ -4,7 +4,7 @@
 
 const {
     game, newGame, showScore, addTurn, lightsOn, showTurns, playerTurn,
-    getInterval, saveScore, topScores, loadScores,
+    getInterval, getLightDuration, saveScore, topScores, loadScores,
 } = require("../game");
 
 global.Swal = { fire: jest.fn(() => new Promise(() => { })) };
@@ -142,6 +142,11 @@ describe("difficulty ramp", () => {
     });
     test("playback never drops below the 400ms floor", () => {
         expect(getInterval(100)).toBe(400);
+    });
+    test("a lit button always goes dark before the next flash", () => {
+        for (let score of [0, 5, 10, 50, 100]) {
+            expect(getLightDuration(score)).toBeLessThan(getInterval(score));
+        }
     });
 });
 

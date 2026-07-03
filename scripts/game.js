@@ -6,43 +6,10 @@ let game = {
     lastButton: "",
     turnInProgress: false,
     playerName: "",
-    seedDate: "",
-    mode: "daily",
-    rng: null,
     choices: ["button1", "button2", "button3", "button4"],
 };
 
 const SCOREBOARD_KEY = "simonScoreboard";
-
-// --- Deterministic daily sequence --------------------------------------------
-// Everyone who plays on the same calendar day gets the identical sequence, so
-// scores are directly comparable. The date string is hashed into a seed and fed
-// to a small, fast PRNG (mulberry32).
-
-function todayString(date) {
-    let d = date || new Date();
-    return d.toISOString().slice(0, 10); // YYYY-MM-DD
-}
-
-function hashSeed(str) {
-    let h = 1779033703 ^ str.length;
-    for (let i = 0; i < str.length; i++) {
-        h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
-        h = (h << 13) | (h >>> 19);
-    }
-    return h >>> 0;
-}
-
-function mulberry32(seed) {
-    let a = seed >>> 0;
-    return function () {
-        a |= 0;
-        a = (a + 0x6d2b79f5) | 0;
-        let t = Math.imul(a ^ (a >>> 15), 1 | a);
-        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-}
 
 // --- Difficulty --------------------------------------------------------------
 // Playback speeds up as the score climbs, with a floor so it stays playable.
@@ -52,14 +19,27 @@ function getInterval(score) {
 
 // --- Sound -------------------------------------------------------------------
 // One tone per button via the Web Audio API — no audio files needed. Guarded so
-// it silently no-ops in environments without AudioContext (e.g. jsdom/tests).
+// it silently no-ops where AudioContext is unavailable (e.g. jsdom/tests).
 const TONES = { button1: 329.63, button2: 261.63, button3: 220.0, button4: 164.81 };
 let audioCtx = null;
 
-function playSound(circ) {
-    let Ctx = typeof AudioContext !== "undefined" ? AudioContext
+function audioContextClass() {
+    return typeof AudioContext !== "undefined" ? AudioContext
         : typeof webkitAudioContext !== "undefined" ? webkitAudioContext
         : null;
+}
+
+// Browsers block audio until a user gesture. Called from the New game click so
+// the computer's first playback (which runs on a timer) isn't silent.
+function unlockAudio() {
+    let Ctx = audioContextClass();
+    if (!Ctx) return;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === "suspended" && audioCtx.resume) audioCtx.resume();
+}
+
+function playSound(circ) {
+    let Ctx = audioContextClass();
     if (!Ctx || !TONES[circ]) return;
     if (!audioCtx) audioCtx = new Ctx();
     let osc = audioCtx.createOscillator();
@@ -74,7 +54,9 @@ function playSound(circ) {
     osc.stop(audioCtx.currentTime + 0.4);
 }
 
-// --- Scoreboard (persisted in localStorage) ----------------------------------
+// --- Leaderboard -------------------------------------------------------------
+// A single global, persistent board: one entry per player, holding their best
+// score ever. Stored in localStorage so it survives reloads.
 function loadScores() {
     try {
         return JSON.parse(localStorage.getItem(SCOREBOARD_KEY)) || [];
@@ -83,56 +65,43 @@ function loadScores() {
     }
 }
 
-function isDailyLocked(name, date) {
-    let day = date || todayString();
-    let player = (name || "Anonymous").trim() || "Anonymous";
-    return loadScores().some((s) => s.name === player && s.date === day);
-}
-
-function saveScore(name, score, date) {
+function saveScore(name, score) {
     let scores = loadScores();
-    let day = date || todayString();
     let player = (name || "Anonymous").trim() || "Anonymous";
-    // One recorded attempt per player per day: the first result stands. Because
-    // the daily sequence is deterministic, replaying it must not be able to
-    // inflate a score, so a second attempt on the same day is ignored.
-    if (scores.some((s) => s.name === player && s.date === day)) return scores;
-    scores.push({ name: player, score: score, date: day });
-    localStorage.setItem(SCOREBOARD_KEY, JSON.stringify(scores));
+    let existing = scores.find((s) => s.name === player);
+    if (existing) {
+        if (score > existing.score) existing.score = score;
+    } else {
+        scores.push({ name: player, score: score });
+    }
+    try {
+        localStorage.setItem(SCOREBOARD_KEY, JSON.stringify(scores));
+    } catch (e) {
+        // storage unavailable (e.g. private browsing) — the score just won't persist
+    }
     return scores;
 }
 
-function topScores(date, limit) {
-    let day = date || todayString();
+function topScores(limit) {
     return loadScores()
-        .filter((s) => s.date === day)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, limit || 10);
-}
-
-// The persistent leaderboard: each player's best score across every day they
-// have played, ranked high to low.
-function bestPerPlayer(limit) {
-    let best = {};
-    for (let s of loadScores()) {
-        if (!(s.name in best) || s.score > best[s.name].score) {
-            best[s.name] = s;
-        }
-    }
-    return Object.values(best)
+        .slice()
         .sort((a, b) => b.score - a.score)
         .slice(0, limit || 10);
 }
 
 function clearScores() {
-    localStorage.removeItem(SCOREBOARD_KEY);
+    try {
+        localStorage.removeItem(SCOREBOARD_KEY);
+    } catch (e) {
+        // ignore
+    }
     renderScoreboard();
 }
 
 function renderScoreboard() {
     let list = document.getElementById("scoreboard-list");
     if (!list) return;
-    let rows = bestPerPlayer();
+    let rows = topScores();
     if (rows.length === 0) {
         list.innerHTML = '<li class="scoreboard-empty">No scores yet — be the first!</li>';
         return;
@@ -154,44 +123,18 @@ function escapeHtml(str) {
 }
 
 // --- Game flow ---------------------------------------------------------------
-// "daily"    — deterministic sequence shared by everyone that day; one recorded
-//              attempt per player, posted to the leaderboard.
-// "practice" — random sequence, unlimited replays, never saved.
 function newGame() {
-    startGame("daily");
-}
-
-function practiceGame() {
-    startGame("practice");
-}
-
-function startGame(mode) {
-    let requestedMode = mode === "practice" ? "practice" : "daily";
-    let nameInput = document.getElementById("player-name");
-    let name = nameInput ? nameInput.value.trim() || "Anonymous" : "Anonymous";
-    let today = todayString();
-
-    if (requestedMode === "daily" && isDailyLocked(name, today)) {
-        if (typeof Swal !== "undefined") {
-            Swal.fire({
-                icon: "info",
-                title: "Already played today",
-                text: `${name} has already set a score on today's daily. Come back tomorrow, or switch to Practice.`,
-            });
-        }
-        return;
-    }
-
-    game.mode = requestedMode;
     game.score = 0;
     game.currentGame = [];
     game.playerMoves = [];
     game.turnNumber = 0;
     game.lastButton = "";
     game.turnInProgress = true;
-    game.playerName = name;
-    game.seedDate = today;
-    game.rng = requestedMode === "daily" ? mulberry32(hashSeed(today)) : null;
+
+    let nameInput = document.getElementById("player-name");
+    game.playerName = nameInput ? nameInput.value.trim() || "Anonymous" : "Anonymous";
+
+    unlockAudio();
 
     for (let circle of document.getElementsByClassName("circle")) {
         if (circle.getAttribute("data-listener") !== "true") {
@@ -222,8 +165,7 @@ function handlePlayerClick(e) {
 
 function addTurn() {
     game.playerMoves = [];
-    let draw = game.rng ? game.rng() : Math.random();
-    game.currentGame.push(game.choices[Math.floor(draw * 4)]);
+    game.currentGame.push(game.choices[Math.floor(Math.random() * 4)]);
     showTurns();
 }
 
@@ -265,23 +207,14 @@ function playerTurn() {
         }
     } else {
         game.turnInProgress = true;
-        if (game.mode === "daily") {
-            saveScore(game.playerName, game.score, game.seedDate);
-            renderScoreboard();
-            Swal.fire({
-                icon: "error",
-                position: "center",
-                title: "Game over!",
-                text: `${game.playerName} scored ${game.score} on the ${game.seedDate} daily. That's your run for today — hit Practice to keep playing.`,
-            });
-        } else {
-            Swal.fire({
-                icon: "error",
-                position: "center",
-                title: "Game over!",
-                text: `Practice run: ${game.score}. Not saved to the leaderboard — take the Daily challenge for the real thing.`,
-            });
-        }
+        saveScore(game.playerName, game.score);
+        renderScoreboard();
+        Swal.fire({
+            icon: "error",
+            position: "center",
+            title: "Game over!",
+            text: `${game.playerName} scored ${game.score}. Hit New game to play again.`,
+        });
     }
 }
 
@@ -289,8 +222,6 @@ if (typeof module !== "undefined") {
     module.exports = {
         game,
         newGame,
-        practiceGame,
-        startGame,
         showScore,
         addTurn,
         lightsOn,
@@ -298,14 +229,9 @@ if (typeof module !== "undefined") {
         playerTurn,
         handlePlayerClick,
         getInterval,
-        hashSeed,
-        mulberry32,
-        todayString,
         loadScores,
         saveScore,
-        isDailyLocked,
         topScores,
-        bestPerPlayer,
         clearScores,
         renderScoreboard,
     };

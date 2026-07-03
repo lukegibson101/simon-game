@@ -3,8 +3,8 @@
  */
 
 const {
-    game, newGame, practiceGame, showScore, addTurn, lightsOn, showTurns, playerTurn,
-    getInterval, hashSeed, mulberry32, saveScore, isDailyLocked, topScores, bestPerPlayer, loadScores,
+    game, newGame, showScore, addTurn, lightsOn, showTurns, playerTurn,
+    getInterval, saveScore, topScores, loadScores,
 } = require("../game");
 
 global.Swal = { fire: jest.fn(() => new Promise(() => { })) };
@@ -133,30 +133,6 @@ describe("gameplay works correctly", () => {
     });
 });
 
-describe("daily seed produces a deterministic sequence", () => {
-    test("the same date yields the same seed", () => {
-        expect(hashSeed("2026-07-03")).toBe(hashSeed("2026-07-03"));
-    });
-    test("different dates yield different seeds", () => {
-        expect(hashSeed("2026-07-03")).not.toBe(hashSeed("2026-07-04"));
-    });
-    test("a seeded generator replays the same numbers", () => {
-        let a = mulberry32(hashSeed("2026-07-03"));
-        let b = mulberry32(hashSeed("2026-07-03"));
-        let seqA = [a(), a(), a(), a(), a()];
-        let seqB = [b(), b(), b(), b(), b()];
-        expect(seqA).toEqual(seqB);
-    });
-    test("two players share the same daily sequence", () => {
-        let seed = hashSeed("2026-07-03");
-        let build = () => {
-            let rng = mulberry32(seed);
-            return Array.from({ length: 8 }, () => game.choices[Math.floor(rng() * 4)]);
-        };
-        expect(build()).toEqual(build());
-    });
-});
-
 describe("difficulty ramp", () => {
     test("playback is 1000ms at the start", () => {
         expect(getInterval(0)).toBe(1000);
@@ -169,55 +145,41 @@ describe("difficulty ramp", () => {
     });
 });
 
-describe("scoreboard and anti-cheat", () => {
+describe("global leaderboard", () => {
     beforeEach(() => {
         localStorage.clear();
     });
     test("saveScore records a player's result", () => {
-        saveScore("Ada", 7, "2026-07-03");
-        expect(loadScores()).toContainEqual({ name: "Ada", score: 7, date: "2026-07-03" });
+        saveScore("Ada", 7);
+        expect(loadScores()).toContainEqual({ name: "Ada", score: 7 });
     });
-    test("a second attempt on the same day is ignored (one shot)", () => {
-        saveScore("Ada", 3, "2026-07-03");
-        saveScore("Ada", 99, "2026-07-03");
-        let ada = loadScores().filter((s) => s.name === "Ada" && s.date === "2026-07-03");
+    test("a player keeps only their best score across replays", () => {
+        saveScore("Ada", 3);
+        saveScore("Ada", 9);
+        saveScore("Ada", 5);
+        let ada = loadScores().filter((s) => s.name === "Ada");
         expect(ada).toHaveLength(1);
-        expect(ada[0].score).toBe(3);
+        expect(ada[0].score).toBe(9);
     });
-    test("isDailyLocked reports when a player has already played", () => {
-        expect(isDailyLocked("Ada", "2026-07-03")).toBe(false);
-        saveScore("Ada", 3, "2026-07-03");
-        expect(isDailyLocked("Ada", "2026-07-03")).toBe(true);
+    test("a blank name is recorded as Anonymous and is never blocked", () => {
+        saveScore("", 4);
+        saveScore("   ", 6);
+        let anon = loadScores().filter((s) => s.name === "Anonymous");
+        expect(anon).toHaveLength(1);
+        expect(anon[0].score).toBe(6);
     });
-    test("the same name can play again on a different day", () => {
-        saveScore("Ada", 3, "2026-07-03");
-        expect(isDailyLocked("Ada", "2026-07-04")).toBe(false);
+    test("topScores ranks all players high to low", () => {
+        saveScore("Ada", 3);
+        saveScore("Grace", 9);
+        saveScore("Alan", 5);
+        expect(topScores().map((s) => s.name)).toEqual(["Grace", "Alan", "Ada"]);
     });
-    test("topScores returns a single day's entries ranked high to low", () => {
-        saveScore("Ada", 3, "2026-07-03");
-        saveScore("Grace", 9, "2026-07-03");
-        saveScore("Alan", 5, "2026-07-03");
-        saveScore("Old", 100, "2020-01-01");
-        let top = topScores("2026-07-03");
-        expect(top.map((s) => s.name)).toEqual(["Grace", "Alan", "Ada"]);
-    });
-    test("bestPerPlayer persists across days and keeps each player's best", () => {
-        saveScore("Ada", 3, "2026-07-03");
-        saveScore("Ada", 8, "2026-07-04"); // Ada's better run on a later day
-        saveScore("Grace", 9, "2026-07-03");
-        let board = bestPerPlayer();
-        expect(board.map((s) => [s.name, s.score])).toEqual([
-            ["Grace", 9],
-            ["Ada", 8],
-        ]);
-    });
-    test("practice runs are not saved to the leaderboard", () => {
-        game.mode = "practice";
-        game.playerName = "Cheater";
-        game.seedDate = "2026-07-03";
+    test("a wrong move saves the score to the global board", () => {
+        game.playerName = "Grace";
+        game.score = 4;
         game.currentGame = ["button1"];
         game.playerMoves = ["button2"];
         playerTurn();
-        expect(loadScores()).toHaveLength(0);
+        expect(loadScores()).toContainEqual({ name: "Grace", score: 4 });
     });
 });

@@ -2,7 +2,7 @@
 
 A small Simon memory game built with vanilla JavaScript and tested with Jest.
 
-Live: <https://lukegibson101.github.io/simon-game>
+Live: <https://gibbo101.github.io/simon-game>
 
 ## How it works
 

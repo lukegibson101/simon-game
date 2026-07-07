@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lukegibson101/simon-game.git"
+    "url": "git+https://github.com/gibbo101/simon-game.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/lukegibson101/simon-game/issues"
+    "url": "https://github.com/gibbo101/simon-game/issues"
   },
-  "homepage": "https://github.com/lukegibson101/simon-game#readme",
+  "homepage": "https://github.com/gibbo101/simon-game#readme",
   "devDependencies": {
     "jest": "^27.3.1"
   }
